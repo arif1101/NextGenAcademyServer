@@ -31,6 +31,7 @@ async function run() {
     const database = client.db('NextGenAcademy')
     const courseCollections = database.collection('courses')
     const bookCollections = database.collection('books')
+    const userCollection = database.collection('users')
 
     // course related data 
     app.get('/courses', async(req, res) => {
@@ -60,6 +61,34 @@ async function run() {
     app.get('/books', async(req,res) => {
        const result = await bookCollections.find().toArray()
        res.send(result)
+    })
+
+    app.get('/books/:id', async (req, res) => {
+      const {id} = req.params;
+      try{
+        const query = {_id: new ObjectId(id)};
+        const book = await bookCollections.findOne(query)
+        if(!book){
+          return res.status(404).json({message: 'Course not found'})
+        }
+        res.send(book)
+      }catch{
+        console.log(error);
+        res.status(500).json({message: 'internal server Eroor'})
+      }
+    })
+
+
+    // user related api 
+
+    app.post('/users', async(req, res) => {
+      const user = req.body;
+      const existingUser = await userCollection.findOne({email: user.email});
+      if(existingUser){
+        return res.send({message: "User already exist"})
+      }
+      const result = await userCollection.insertOne(user)
+      res.send(result)
     })
     
     
