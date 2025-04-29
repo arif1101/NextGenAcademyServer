@@ -81,6 +81,16 @@ async function run() {
 
     // user related api 
 
+    app.get('/users', async(req, res) => {
+      try{
+        const users = await userCollection.find().toArray();
+        res.send(users)
+      }catch(error){
+        console.error(error);
+        res.status(500).json({ message: 'Failed to fetch users', error });
+      }
+    })
+
     app.post('/users', async(req, res) => {
       const user = req.body;
       const existingUser = await userCollection.findOne({email: user.email});
@@ -90,6 +100,39 @@ async function run() {
       const result = await userCollection.insertOne(user)
       res.send(result)
     })
+
+    app.get('/users/by-email/:email', async (req, res) => {
+      const email = req.params.email;
+      try{
+        const user = await userCollection.findOne({email});
+        if(!user){
+          return res.status(404).json({message: 'user not found'})
+        }
+        res.send(user)
+      }catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+      }
+    })
+
+    // update user profile 
+    app.patch('/users/:id', async (req, res) => {
+      const id = req.params.id;
+      const updatedData = req.body;
+    
+      try {
+        const filter = { _id: new ObjectId(id) };
+        const updateDoc = {
+          $set: updatedData,
+        };
+    
+        const result = await userCollection.updateOne(filter, updateDoc);
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: 'Update failed' });
+      }
+    });
     
     
     // Send a ping to confirm a successful connection
