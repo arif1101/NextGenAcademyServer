@@ -32,7 +32,7 @@ async function run() {
     const courseCollections = database.collection('courses')
     const bookCollections = database.collection('books')
     const userCollection = database.collection('users')
-
+    const cartCollection = database.collection('carts')
     // course related data 
     app.get('/courses', async(req, res) => {
       const result = await courseCollections.find().toArray()
@@ -113,6 +113,37 @@ async function run() {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
       }
+    })
+
+    app.get('/carts/:email', async (req, res) => {
+      const {email} = req.params
+      if(!email){
+        return res.status(400).json({message: "Email is required"});
+      }
+
+      try{
+        const userCart = await cartCollection.find({email}).toArray();
+        res.send(userCart)
+      }catch(error){
+        console.error(error)
+        res.status(500).json({message: 'Failed to fetch cart items'});
+      }
+    })
+
+    app.post('/carts', async(req,res) => {
+      const cartItem = req.body;
+      const {coursecode, email} = cartItem
+      if(!coursecode || !email){
+        return res.status(400).json({message: 'Missing coursecode or email'})
+      }
+
+      const existing = await cartCollection.findOne({coursecode, email})
+      
+      if(existing){
+        return res.status(409).json({message: "course already in cart"})
+      }
+      const result = await cartCollection.insertOne(cartItem);
+      res.send(result)
     })
 
     // update user profile 
