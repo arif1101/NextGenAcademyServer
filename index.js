@@ -146,6 +146,19 @@ async function run() {
       res.send(result)
     })
 
+    app.delete('/carts/item/:id', async(req, res) => {
+      const id = req.params.id;
+      try {
+        const result = await cartCollection.deleteOne({_id: new ObjectId(id)})
+        if (result.deletedCount === 0){
+          return res.status(404).json({ message: 'Cart item not found' });
+        }
+        res.json({ message: 'Cart item deleted successfully' });
+      }catch (error) {
+        res.status(500).json({ message: 'Error deleting cart item', error });
+      }
+    })
+
     // update user profile 
     app.patch('/users/:id', async (req, res) => {
       const id = req.params.id;
